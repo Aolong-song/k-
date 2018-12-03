@@ -1,0 +1,150 @@
+//采用邻接表存储结构，设计一个算法，判别无向图G中指定的两个顶点之间是否存在一条长度为k的简单路径。
+//注：简单路径是指顶点序列中不含有重复的顶点。
+
+#include<stdio.h>
+#include<stdlib.h>
+
+typedef struct Next_Node	//链表后续结点
+{
+	char C;
+	Next_Node *next;
+};
+
+typedef struct H_Node	//头节点
+{
+	char C;
+	Next_Node *First;
+};
+
+typedef struct Linked_List	//链表结构体
+{
+	int n;	//存放节点个数
+	int flag[10];	//结点是否访问过的标志	未访问为0
+	H_Node A[10];
+};
+
+/**初始化邻接表*/
+int Init_Graph(Linked_List *G)
+{
+	int i;
+	for (i = 0; i < G->n; i++)
+	{
+		G->flag[i] = 0;
+		G->A[i].First = NULL;
+		G->A[i].C = i + 97;
+	}
+	return 0;
+}
+
+/**创建邻接表*/
+int Creat_Graph(Linked_List *G)
+{
+	Next_Node *p, *q;
+	int n, i;
+	char a, b;
+	getchar();
+	while (1)	//循环输入相邻点构造邻接表
+	{
+		printf("请输入相邻结点,结束为0\n");
+		scanf("%c", &a);
+		if (a=='0')	return 0;
+		getchar();
+		scanf("%c", &b);
+		getchar();
+		if (!G->A[a - 97].First)
+		{
+			G->A[a - 97].First = (Next_Node*)malloc(sizeof(Next_Node));
+			G->A[a - 97].First->C = b;
+			G->A[a - 97].First->next = NULL;
+		}
+		else
+		{
+			p = (Next_Node*)malloc(sizeof(Next_Node));
+			p->C = b;
+			p->next = G->A[a - 97].First->next;
+			G->A[a - 97].First->next = p;
+		}
+		if (!G->A[b - 97].First)
+		{
+			G->A[b - 97].First = (Next_Node*)malloc(sizeof(Next_Node));
+			G->A[b - 97].First->C = a;
+			G->A[b - 97].First->next = NULL;
+		}
+		else
+		{
+			q = (Next_Node*)malloc(sizeof(Next_Node));
+			q->C = a;
+			q->next = G->A[b - 97].First->next;
+			G->A[b - 97].First->next = q;
+		}
+	}
+	return 0;
+}
+
+/**查找算法*/
+int Search(Linked_List *G, char a, char b, int k)
+{
+	if (!k)	return 0;
+	if (G->A[a - 97].First)	//a有后续结点
+	{
+		if (!G->flag[G->A[a - 97].First->C - 97])	//a的第一个后续结点未访问
+		{
+			G->flag[G->A[a - 97].First->C - 97] = 1;
+			if (G->A[G->A[a - 97].First->C - 97].C == b)	//若是最后一步到b
+			{
+				printf("查找成功！");
+				return 1;
+			}
+			else	//未到达最后一步
+			{
+				Search(G, G->A[a - 97].First->C, b, k - 1);
+
+			}
+		}
+		else	//a的第一个后续结点已经被访问
+		{
+			while (G->flag[G->A[a - 97].First->C])	//查找a的后续结点中第一个未被访问过的结点
+			{
+				if (!G->A[a - 97].First->next)	//a已经无未被访问的结点，返回上一层
+				{
+					G->flag[a - 97] = 0;
+					return 0;
+				}
+				G->A[a - 97].First = G->A[a - 97].First->next;	//循环查找到第一个未被访问的结点
+			}
+			if (G->A[G->A[a - 97].First->C - 97].C == b)	//若是最后一步到b
+			{
+				printf("查找成功！");
+				return 1;
+			}
+			else
+			{
+				G->flag[G->A[a - 97].First->C - 97] = 1;
+				Search(G, G->A[a - 97].First->next->C, b, k - 1);
+			}
+		}
+	}
+	return 0;
+}
+
+int main()
+{
+	Linked_List G;
+	char a, b;
+	int k, x;
+	printf("请输入结点个数:");
+	scanf("%d", &G.n);
+	Init_Graph(&G);
+	Creat_Graph(&G);
+	printf("请输入两结点及长度:");
+	getchar();
+	scanf("%c", &a);
+	getchar();
+	scanf("%c", &b);
+	getchar();
+	scanf("%d", &k);
+	G.flag[a - 97] = 1;
+	x = Search(&G, a, b, k);
+	if (!x)	printf("查找失败！");
+	return 0;
+}
